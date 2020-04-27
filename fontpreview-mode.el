@@ -91,12 +91,17 @@
     "-pointsize " fontpreview-font-size
     " -font '" font "'"
     " -fill '" fontpreview-foregound-color "'"
-    " -annotate +0+0  '" fontpreview-preview-text "'" 
+    " -annotate +0+0  '" font "\n\n" fontpreview-preview-text "'" 
     " -flatten "
     "'" fontpreview-preview-file "'"
     ))
-  )
-
+  (let ((preview (car (last (split-string fontpreview-preview-file "/" )))))
+    ( when (get-buffer  preview)   (kill-buffer preview))
+    (find-file fontpreview-preview-file)
+    (image-mode)
+    (fontpreview-mode)
+    ) )
+   
 (defvar fontpreview-font-list
   '((name . "Installed Fonts")
     (candidates .  (lambda ()
@@ -117,9 +122,17 @@
 	      ))
     (progn
       (fontpreview-generate-preview font)  
-      (find-file-other-window fontpreview-preview-file) 
-      (switch-to-buffer-other-window "helm")
       )))
-    
+
+;;;;;;;;;;;;;;;;;;;;;;;;  Mode ;;;;;;;;;;;;;;;;;;;;;;;;;
+(define-minor-mode fontpreview-mode
+  "Minor mode for acting on preview created by fontpreview"
+  :lighter " fontpreview"
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-c n") 'fontpreview)
+            map)
+  )
+
+
 
 (provide 'fontpreview-mode)
