@@ -33,14 +33,10 @@
 ;;   :group 'wp
 ;;   )
 
-(defcustom  fontpreview-search-promt
-  "❯"
-  "Search promt symbol"
-  :group 'fontpreview
-  )					;
+
 
 (defcustom  fontpreview-preview-size
-  "532x365"
+  "960x365" 
   "Preview image size."
   :group 'fontpreview
   )
@@ -76,32 +72,34 @@
   "Temporary fontpreview file."
   )
 
-;;(defvar font "Gentium")
+(defvar fontpreview-current-font "")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun fontpreview-generate-preview (font)
   "Generate preview image."
-  (start-process-shell-command
-   "convert"
-   "*fontpreview-output*"
+  (shell-command
    (concat
     "convert "
     "-size " fontpreview-preview-size " xc:"  "'" fontpreview-background-color  "'"
     " -gravity center "
     "-pointsize " fontpreview-font-size
     " -font '" font "'"
-    " -fill '" fontpreview-foregound-color "'"
+    " -fill '" fontpreview-foregound-color "'" 
     " -annotate +0+0  '" font "\n\n" fontpreview-preview-text "'" 
     " -flatten "
     "'" fontpreview-preview-file "'"
-    ))
-  (let ((preview (car (last (split-string fontpreview-preview-file "/" )))))
-    ( when (get-buffer  preview)   (kill-buffer preview))
-    (find-file fontpreview-preview-file)
-    (image-mode)
-    (fontpreview-mode)
-    ) )
-   
+    )
+   "*fontpreview-output*"
+   "*fontpreview-error*")
+  (with-current-buffer (get-buffer-create "*fontpreview*")
+      (fundamental-mode)
+      (erase-buffer)
+      (insert-file-literally fontpreview-preview-file)
+      (image-mode)
+      (fontpreview-mode)
+      (switch-to-buffer "*fontpreview*")
+      ))
+
 (defvar fontpreview-font-list
   '((name . "Installed Fonts")
     (candidates .  (lambda ()
@@ -114,25 +112,55 @@
     )
   "List of fonts installed on the system, provided by convert.")
 
+(defvar fontpreview-window-config
+  nil
+  "Temporary variable to save window configuration to restore it."
+  )
+
 (defun fontpreview ()
   "Preview installed fonts"
   (interactive)
-  (let ((font (helm
-	       :sources '(fontpreview-font-list))
-	      ))
-    (progn
-      (fontpreview-generate-preview font)  
-      )))
+  (setq fontpreview-current-font (helm
+				   :sources '(fontpreview-font-list))
+				  )
+  (progn
+    (setq fontpreview-window-config (current-window-configuration))
+    (delete-other-windows)
+    (split-window-right)
+    (other-window 1)
+    (split-window-below 20)
+    (fontpreview-generate-preview fontpreview-current-font)  
+    ))
+
+(defun fontpreview-copy-font-name ()
+  "Copy name of selected font to kill-ring"
+  (interactive)
+  (kill-new fontpreview-current-font)
+  )
+
+(defun fontpreview-next-font ()
+  "Choose another font for preview"
+   (interactive)
+   (kill-buffer)
+   (fontpreview))
+
+(defun fontpreview-quit ()
+  "Clean up fontpreview"
+   (interactive)
+  (kill-buffer "*fontpreview*")
+  (set-window-configuration fontpreview-window-config)
+  (delete-file  fontpreview-preview-file)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;  Mode ;;;;;;;;;;;;;;;;;;;;;;;;;
 (define-minor-mode fontpreview-mode
   "Minor mode for acting on preview created by fontpreview"
   :lighter " fontpreview"
   :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-c n") 'fontpreview)
+            (define-key map (kbd "n")  'fontpreview-next-font) ;; select next font
+	    (define-key map (kbd "c") 'fontpreview-copy-font-name) ;; copy font name
+	    (define-key map (kbd "q") 'fontpreview-quit) ;; copy font name
             map)
   )
-
-
 
 (provide 'fontpreview-mode)
