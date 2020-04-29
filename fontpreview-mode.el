@@ -66,6 +66,14 @@
   :group 'fontpreview
   )
 
+;;;;;;;;;;;;;;;;;;;;;;;;; Help text ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar fontpreview-help-text
+  "
+n      Choose different font.
+c      Copy font name.
+q     Quit fontpreview"
+  "Help text to be displayed in *fontpreview-info* buffer")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;; Create temporary file ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar fontpreview-preview-file
   (make-temp-file "fontpreview" nil ".jpg")
@@ -85,12 +93,13 @@
     "-pointsize " fontpreview-font-size
     " -font '" font "'"
     " -fill '" fontpreview-foregound-color "'" 
-    " -annotate +0+0  '" font "\n\n" fontpreview-preview-text "'" 
+    " -annotate +0+0  '" fontpreview-preview-text "'" 
     " -flatten "
     "'" fontpreview-preview-file "'"
     )
    "*fontpreview-output*"
    "*fontpreview-error*")
+  ;; Create / refresh preview window
   (with-current-buffer (get-buffer-create "*fontpreview*")
       (fundamental-mode)
       (erase-buffer)
@@ -98,19 +107,50 @@
       (image-mode)
       (fontpreview-mode)
       (switch-to-buffer "*fontpreview*")
+      ;; Create / refresh info window
+      (other-window 1)
+      (with-current-buffer (get-buffer-create "*fontpreview-info*")
+	(fundamental-mode)
+	(erase-buffer)
+	(insert
+	 (replace-regexp-in-string "[()]" ""
+	 (replace-regexp-in-string  "   " "\n" ( format  "%s" (assoc font fontpreview-font-assoc)))))
+	(newline 2)
+	(insert fontpreview-help-text)
+	(switch-to-buffer "*fontpreview-info*")
+	)
+      ;; switch back to  preview window
+      (other-window -1)
       ))
 
-(defvar fontpreview-font-list
+(defvar fontpreview-font-assoc ""
+  "List of installed font with attributes and create an assoction list used for the *fontpreview-info* buffer.")
+
+(defun endcons (a v)
+   (if (null v) (cons a nil) (cons (car v) (endcons a (cdr v)))))
+
+(defun fontpreview-get-font-list ()
+  "Return list of installed font and create font info hash"
+  (let ((fonts nil))
+  (dolist   (element (split-string  (shell-command-to-string "convert -list font |  sed -ne '/Font/,/-1/p' ") "Font:" t " ") )
+    (let ((elt (split-string   element "[\n]" t " ")))
+      (setq fontpreview-font-assoc   (cons elt fontpreview-font-assoc))
+      ))
+))
+
+
+(defvar fontpreview-query
   '((name . "Installed Fonts")
     (candidates .  (lambda ()
 		     (split-string
 		      (shell-command-to-string "convert -list font | awk -F: '/^[ ]*Font: /{print substr($NF,2)}'")
-		      )))
+		      ))
+		)
     (action  . (lambda (candidate)
 		 (message "%s" candidate)
 		 ))
     )
-  "List of fonts installed on the system, provided by convert.")
+  "Helm query for fonts installed on the system, provided by convert.")
 
 (defvar fontpreview-window-config
   nil
@@ -118,19 +158,20 @@
   )
 
 (defun fontpreview ()
-  "Preview installed fonts"
-  (interactive)
-  (setq fontpreview-current-font (helm
-				   :sources '(fontpreview-font-list))
-				  )
-  (progn
-    (setq fontpreview-window-config (current-window-configuration))
-    (delete-other-windows)
-    (split-window-right)
-    (other-window 1)
-    (split-window-below 20)
-    (fontpreview-generate-preview fontpreview-current-font)  
-    ))
+"Preview installed fonts"
+(interactive)
+(fontpreview-get-font-list)
+(setq fontpreview-current-font (helm
+				:sources  fontpreview-query)
+      )
+(progn
+  (setq fontpreview-window-config (current-window-configuration))
+  (delete-other-windows)
+  (split-window-right)
+  (other-window 1)
+  (split-window-below 20)
+  (fontpreview-generate-preview fontpreview-current-font)  
+  ))
 
 (defun fontpreview-copy-font-name ()
   "Copy name of selected font to kill-ring"
@@ -148,6 +189,7 @@
   "Clean up fontpreview"
    (interactive)
   (kill-buffer "*fontpreview*")
+  (kill-buffer "*fontpreview-info*")
   (set-window-configuration fontpreview-window-config)
   (delete-file  fontpreview-preview-file)
   )
