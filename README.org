@@ -1,11 +1,27 @@
 * FONTPREVIEW MODE
 
-This tries to be a reimplementation of [[ [[https://github.com/sdushantha/fontpreview]] by Siddharth Dushantha in Elisp
+This tries to be a reimplementation of  [[https://github.com/sdushantha/fontpreview][sdushantha/fontpreview]] by Siddharth Dushantha in Elisp
 using helm instead of fzf.
 
 [[fontpreview.gif]]
 
 You can browse the fonts installed on your system and show a preview, copy the font name or path and set the frame font.
 
+* Installation
+
+Fontpreview-mode depends on [[https://www.imagemagick.org][imagemagick]], which is probably already installed on you system. 
+It also depends on [[https://github.com/emacs-helm/helm/wiki][helm]].
+
+Clone the repository or just download fontpreview-mode.el and put it in the load-path.
+
+Put the following somewhere in your .emacs file.
+
+#+BEGIN_SRC emacs-lisp
+(require 'fontpreview-mode)
+#+END_SRC
+
+* Usage
+
+Just run M-x fontpreview to run fontpreview. 
 
 
