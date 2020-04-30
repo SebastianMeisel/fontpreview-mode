@@ -71,6 +71,8 @@
   "
 n      Choose different font.
 c      Copy font name.
+p     Copy path to font file.
+s     Set frame font.
 q     Quit fontpreview"
   "Help text to be displayed in *fontpreview-info* buffer")
 
@@ -126,8 +128,8 @@ q     Quit fontpreview"
 (defvar fontpreview-font-assoc ""
   "List of installed font with attributes and create an assoction list used for the *fontpreview-info* buffer.")
 
-(defun endcons (a v)
-   (if (null v) (cons a nil) (cons (car v) (endcons a (cdr v)))))
+;; (defun endcons (a v)
+;;    (if (null v) (cons a nil) (cons (car v) (endcons a (cdr v)))))
 
 (defun fontpreview-get-font-list ()
   "Return list of installed font and create font info hash"
@@ -152,10 +154,18 @@ q     Quit fontpreview"
     )
   "Helm query for fonts installed on the system, provided by convert.")
 
+;; save window configuration
 (defvar fontpreview-window-config
   nil
   "Temporary variable to save window configuration to restore it."
   )
+
+(defvar fontpreview-called-from-preview
+  nil
+  "Temporary flag to mark if fontpreview is called from preview, to prevent saving the window configuration."
+  )
+
+
 
 (defun fontpreview ()
 "Preview installed fonts"
@@ -165,7 +175,9 @@ q     Quit fontpreview"
 				:sources  fontpreview-query)
       )
 (progn
-  (setq fontpreview-window-config (current-window-configuration))
+  (if fontpreview-called-from-preview
+      (setq fontpreview-called-from-preview nil)
+    (setq fontpreview-window-config (current-window-configuration)))
   (delete-other-windows)
   (split-window-right)
   (other-window 1)
@@ -176,14 +188,30 @@ q     Quit fontpreview"
 (defun fontpreview-copy-font-name ()
   "Copy name of selected font to kill-ring"
   (interactive)
-  (kill-new fontpreview-current-font)
+  (kill-new (replace-regexp-in-string "-" " " fontpreview-current-font))
+  )
+
+(defun fontpreview-copy-font-path ()
+  "Copy path of selected font to kill-ring"
+  (interactive)
+  (kill-new
+   (replace-regexp-in-string "[()]" "" (car (last
+					     (split-string (car (last
+								 (assoc  fontpreview-current-font fontpreview-font-assoc))))))
+			     )))
+
+(defun fontpreview-set-frame-font ()
+  "Set current font (temporarily) as  frame font"
+  (interactive)
+  (set-frame-font (replace-regexp-in-string "-" " "   fontpreview-current-font) nil t)
   )
 
 (defun fontpreview-next-font ()
   "Choose another font for preview"
-   (interactive)
-   (kill-buffer)
-   (fontpreview))
+  (interactive)
+  (setq fontpreview-called-from-preview t)
+  (kill-buffer)
+  (fontpreview))
 
 (defun fontpreview-quit ()
   "Clean up fontpreview"
@@ -201,6 +229,8 @@ q     Quit fontpreview"
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "n")  'fontpreview-next-font) ;; select next font
 	    (define-key map (kbd "c") 'fontpreview-copy-font-name) ;; copy font name
+	    (define-key map (kbd "p") 'fontpreview-copy-font-name) ;; copy font name
+	    (define-key map (kbd "s") 'fontpreview-set-frame-font) ;; copy font name
 	    (define-key map (kbd "q") 'fontpreview-quit) ;; copy font name
             map)
   )

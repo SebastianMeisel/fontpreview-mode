@@ -1,0 +1,11 @@
+* FONTPREVIEW MODE
+
+This tries to be a reimplementation of [fontpreview](https://github.com/sdushantha/fontpreview) by Siddharth Dushantha in Elisp
+using helm instead of fzf.
+
+![fontpreview-mode](fontpreview.gif)
+
+You can browse the fonts installed on your system and show a preview, copy the font name or path and set the frame font.
+
+
+
