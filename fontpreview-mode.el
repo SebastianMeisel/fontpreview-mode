@@ -53,7 +53,7 @@
   :group 'fontpreview
   )
 
-(defcustom  fontpreview-foregound-color
+(defcustom  fontpreview-foreground-color
   "#000000"
   "Preview font foreground color."
   :group 'fontpreview
@@ -69,7 +69,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;; Help text ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar fontpreview-help-text
   "
-n      Choose different font.
+n      Choose different font.                    t    Change preview text.
 c      Copy font name.
 p     Copy path to font file.
 s     Set frame font.
@@ -85,6 +85,12 @@ q     Quit fontpreview"
 (defvar fontpreview-current-font "")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; help functions
+(defmacro if-exists  (var)
+  "Returns value of variable if it extists or nil"
+   (and (boundp 'var) var))
+  
+;;;;;;;;
 (defun fontpreview-generate-preview (font &optional preview-text foreground-color background-color font-size)
   "Generate preview image from FONT.
 
@@ -97,7 +103,7 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
     " -gravity center "
     "-pointsize " (or font-size fontpreview-font-size)
     " -font '" font "'"
-    " -fill '" (or foreground-color  fontpreview-foregound-color) "'" 
+    " -fill '" (or foreground-color  fontpreview-foreground-color) "'" 
     " -annotate +0+0  '" (or preview-text fontpreview-preview-text) "'" 
     " -flatten "
     "'" fontpreview-preview-file "'"
@@ -111,6 +117,10 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
       (insert-file-literally fontpreview-preview-file)
       (image-mode)
       (fontpreview-mode)
+      (setq-local preview-text (or preview-text fontpreview-preview-text))
+      (setq-local foreground-color (or foreground-color fontpreview-foreground-color))
+      (setq-local background-color (or background-color fontpreview-background-color))
+      (setq-local font-size (or font-size fontpreview-font-size))
       (switch-to-buffer "*fontpreview*")
       ;; Create / refresh info window
       (other-window 1)
@@ -215,8 +225,12 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
   "Choose another font for preview"
   (interactive)
   (setq fontpreview-called-from-preview t)
-  (kill-buffer)
-  (fontpreview))
+ ;; (kill-buffer)
+  (fontpreview  preview-text
+	        foreground-color
+	       background-color
+	       font-size
+	       ))
 
 (defun fontpreview-quit ()
   "Clean up fontpreview"
@@ -227,16 +241,28 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
   (delete-file  fontpreview-preview-file)
   )
 
+(defun fontpreview-change-preview-text ()
+  "Change the preview-text in fontpreview."
+  (interactive)
+  (setq-local preview-text (read-string "Preview-text: "))
+  (fontpreview-generate-preview  fontpreview-current-font
+				 preview-text
+				 foreground-color
+				 background-color
+				 font-size)
+  )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;  Mode ;;;;;;;;;;;;;;;;;;;;;;;;;
 (define-minor-mode fontpreview-mode
   "Minor mode for acting on preview created by fontpreview"
   :lighter " fontpreview"
   :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "n")  'fontpreview-next-font) ;; select next font
-	    (define-key map (kbd "c") 'fontpreview-copy-font-name) ;; copy font name
-	    (define-key map (kbd "p") 'fontpreview-copy-font-name) ;; copy font name
-	    (define-key map (kbd "s") 'fontpreview-set-frame-font) ;; copy font name
-	    (define-key map (kbd "q") 'fontpreview-quit) ;; copy font name
+            (define-key map (kbd "n")  'fontpreview-next-font) 
+	    (define-key map (kbd "c") 'fontpreview-copy-font-name) 
+	    (define-key map (kbd "p") 'fontpreview-copy-font-path) 
+	    (define-key map (kbd "s") 'fontpreview-set-frame-font) 
+	    (define-key map (kbd "t") 'fontpreview-change-preview-text) 
+	    (define-key map (kbd "q") 'fontpreview-quit) 
             map)
   )
 
