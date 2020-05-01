@@ -65,6 +65,28 @@
   "The text used for fontpreview"
   :group 'fontpreview
   )
+;;;;;;; current valiels
+
+(defvar  fontpreview-current-font-size
+  nil
+  "Preview font size."
+    )
+
+(defvar  fontpreview-current-background-color
+  nil
+    "Preview font background color."
+    )
+
+(defvar  fontpreview-current-foreground-color
+  nil
+    "Preview font foreground color."
+    )
+
+(defvar  fontpreview-current-preview-text
+  nil
+    "The text used for fontpreview"
+    )
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;; Help text ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar fontpreview-help-text
@@ -99,12 +121,12 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
   (shell-command
    (concat
     "convert "
-    "-size "  fontpreview-preview-size  " xc:"  "'" (or background-color fontpreview-background-color)  "'"
+    "-size "  fontpreview-preview-size  " xc:"  "'" (or background-color fontpreview-current-background-color)  "'"
     " -gravity center "
-    "-pointsize " (or font-size fontpreview-font-size)
+    "-pointsize " (or font-size fontpreview-current-font-size)
     " -font '" font "'"
-    " -fill '" (or foreground-color  fontpreview-foreground-color) "'" 
-    " -annotate +0+0  '" (or preview-text fontpreview-preview-text) "'" 
+    " -fill '" (or foreground-color  fontpreview-current-foreground-color) "'" 
+    " -annotate +0+0  '" (or preview-text fontpreview-current-preview-text) "'" 
     " -flatten "
     "'" fontpreview-preview-file "'"
     )
@@ -117,10 +139,10 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
       (insert-file-literally fontpreview-preview-file)
       (image-mode)
       (fontpreview-mode)
-      (setq-local preview-text (or preview-text fontpreview-preview-text))
-      (setq-local foreground-color (or foreground-color fontpreview-foreground-color))
-      (setq-local background-color (or background-color fontpreview-background-color))
-      (setq-local font-size (or font-size fontpreview-font-size))
+      (when (boundp 'preview-text) (setq fontpreview-current-preview-text preview-text))
+      (when (boundp 'foreground-color) (setq fontpreview-current-foreground-color foreground-color))
+      (when (boundp 'background-color) (setq fontpreview-current-background-color background-color))
+      (when (boundp 'font-size) (setq fontpreview-current-font-size font-size))
       (switch-to-buffer "*fontpreview*")
       ;; Create / refresh info window
       (other-window 1)
@@ -191,13 +213,19 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
       )
 (progn
   (if fontpreview-called-from-preview
-      (setq fontpreview-called-from-preview nil)
+      (progn
+	(setq fontpreview-called-from-preview nil)
+	(kill-buffer "*fontpreview*"))
     (setq fontpreview-window-config (current-window-configuration)))
   (delete-other-windows)
   (split-window-right)
   (other-window 1)
   (split-window-below 20)
-  (fontpreview-generate-preview fontpreview-current-font  preview-text foreground-color background-color font-size)  
+  (setq fontpreview-current-preview-text (or preview-text fontpreview-preview-text))
+  (setq fontpreview-current-foreground-color (or  foreground-color fontpreview-foreground-color))
+  (setq fontpreview-current-background-color (or background-color fontpreview-background-color ))
+  (setq fontpreview-current-font-size (or font-size fontpreview-font-size))
+  (fontpreview-generate-preview fontpreview-current-font  fontpreview-current-preview-text fontpreview-current-foreground-color fontpreview-current-background-color fontpreview-current-font-size)  
   ))
 
 (defun fontpreview-copy-font-name ()
@@ -225,12 +253,8 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
   "Choose another font for preview"
   (interactive)
   (setq fontpreview-called-from-preview t)
- ;; (kill-buffer)
-  (fontpreview  preview-text
-	        foreground-color
-	       background-color
-	       font-size
-	       ))
+  (fontpreview fontpreview-current-preview-text fontpreview-current-foreground-color fontpreview-current-background-color fontpreview-current-font-size) )
+	       
 
 (defun fontpreview-quit ()
   "Clean up fontpreview"
@@ -244,12 +268,8 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
 (defun fontpreview-change-preview-text ()
   "Change the preview-text in fontpreview."
   (interactive)
-  (setq-local preview-text (read-string "Preview-text: "))
-  (fontpreview-generate-preview  fontpreview-current-font
-				 preview-text
-				 foreground-color
-				 background-color
-				 font-size)
+  (setq fontpreview-current-preview-text (read-string "Preview-text: "))
+  (fontpreview-generate-preview fontpreview-current-font  fontpreview-current-preview-text fontpreview-current-foreground-color fontpreview-current-background-color fontpreview-current-font-size)  
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;  Mode ;;;;;;;;;;;;;;;;;;;;;;;;;
