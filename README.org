@@ -24,4 +24,11 @@ Put the following somewhere in your .emacs file.
 
 Just run M-x fontpreview to run fontpreview. 
 
+* Customization 
 
+You can customize the text-sample, foreground- and background-color and font-size  used for the preview. The variables are:
+
+fontpreview-preview-text
+fontpreview-foreground-color
+fontpreview-background-color
+fontpreview-font-size
