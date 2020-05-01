@@ -85,17 +85,20 @@ q     Quit fontpreview"
 (defvar fontpreview-current-font "")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun fontpreview-generate-preview (font)
-  "Generate preview image."
+(defun fontpreview-generate-preview (font &optional preview-text foreground-color background-color font-size)
+  "Generate preview image from FONT.
+
+If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the value(s) are use for the preview.
+"
   (shell-command
    (concat
     "convert "
-    "-size " fontpreview-preview-size " xc:"  "'" fontpreview-background-color  "'"
+    "-size "  fontpreview-preview-size  " xc:"  "'" (or background-color fontpreview-background-color)  "'"
     " -gravity center "
-    "-pointsize " fontpreview-font-size
+    "-pointsize " (or font-size fontpreview-font-size)
     " -font '" font "'"
-    " -fill '" fontpreview-foregound-color "'" 
-    " -annotate +0+0  '" fontpreview-preview-text "'" 
+    " -fill '" (or foreground-color  fontpreview-foregound-color) "'" 
+    " -annotate +0+0  '" (or preview-text fontpreview-preview-text) "'" 
     " -flatten "
     "'" fontpreview-preview-file "'"
     )
@@ -167,8 +170,10 @@ q     Quit fontpreview"
 
 
 
-(defun fontpreview ()
-"Preview installed fonts"
+(defun fontpreview (&optional preview-text foreground-color background-color font-size)
+"Preview installed fonts.
+
+If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the value(s) are use for the preview."
 (interactive)
 (fontpreview-get-font-list)
 (setq fontpreview-current-font (helm
@@ -182,7 +187,7 @@ q     Quit fontpreview"
   (split-window-right)
   (other-window 1)
   (split-window-below 20)
-  (fontpreview-generate-preview fontpreview-current-font)  
+  (fontpreview-generate-preview fontpreview-current-font  preview-text foreground-color background-color font-size)  
   ))
 
 (defun fontpreview-copy-font-name ()
