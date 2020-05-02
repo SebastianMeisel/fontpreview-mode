@@ -87,12 +87,13 @@
 
 
 (defvar fontpreview-help-text
-  "
-n       Choose different font.                     t    Change preview text.
-c  n   Copy font name.                               f    Change foreground-color.
-c p    Copy path to font file.                     b   Change background-color.
-s       Set frame font.                                   +   Change font-size.
-q      Quit fontpreview"
+  "! Set frame font only works with TTF or OTF fonts !
+
+n     Choose a different font.   t    Change preview text.
+c n   Copy font name.   f    Change foreground-color.
+c p   Copy path to font file.   b    Change background-color.
+s     Set frame font.  +    Change font-size.
+q     Quit fontpreview"
   "Help text to be displayed in *fontpreview-info* buffer.")
 
 (defvar fontpreview-preview-file
@@ -138,7 +139,20 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
 	 (replace-regexp-in-string "[()]" ""
 	 (replace-regexp-in-string  "   " "\n" ( format  "%s" (assoc font fontpreview-font-assoc)))))
 	(newline 2)
-	(insert fontpreview-help-text)
+	(let ((start (point)))
+	  (insert fontpreview-help-text)
+	  (align-regexp start (point) "\\(\s\s+\\)" 1  3  t))
+	(newline 2)
+	(let ((cur-font-path
+	  (replace-regexp-in-string "[()]" "" (car (last
+						    (split-string (car (last
+									(assoc  fontpreview-current-font fontpreview-font-assoc)))))))))
+	(when (string-match "[ot]tf$" cur-font-path)
+	  (insert "OTF-features:")
+	  (newline 2)
+	  (insert (shell-command-to-string (concat "otfinfo -f " cur-font-path)))
+	  (goto-char (point-min))
+	  ))
 	(switch-to-buffer "*fontpreview-info*"))
       ;; switch back to  preview window
       (other-window -1) ))
