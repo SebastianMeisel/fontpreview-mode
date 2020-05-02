@@ -88,11 +88,11 @@
 
 (defvar fontpreview-help-text
   "
-n      Choose different font.                    t    Change preview text.
-c      Copy font name.                               f    Change foreground-color.
-p     Copy path to font file.                     b   Change background-color.
-s     Set frame font.
-q     Quit fontpreview"
+n       Choose different font.                     t    Change preview text.
+c  n   Copy font name.                               f    Change foreground-color.
+c p    Copy path to font file.                     b   Change background-color.
+s       Set frame font.                                   +   Change font-size.
+q      Quit fontpreview"
   "Help text to be displayed in *fontpreview-info* buffer.")
 
 (defvar fontpreview-preview-file
@@ -267,6 +267,17 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
    fontpreview-current-background-color
    fontpreview-current-font-size) )
 
+(defun fontpreview-change-font-size ()
+  "Change the font-size of preview in fontpreview."
+  (interactive)
+  (setq fontpreview-current-font-size (read-string "pt-size: "))
+  (fontpreview-generate-preview
+   fontpreview-current-font
+   fontpreview-current-preview-text
+   fontpreview-current-foreground-color
+   fontpreview-current-background-color
+   fontpreview-current-font-size) )
+
 
 ;;;###autoload
 (define-minor-mode fontpreview-mode
@@ -274,12 +285,13 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
   :lighter " fontpreview"
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "n")  'fontpreview-next-font)
-	    (define-key map (kbd "c") 'fontpreview-copy-font-name)
-	    (define-key map (kbd "p") 'fontpreview-copy-font-path)
+	    (define-key map (kbd "c n") 'fontpreview-copy-font-name)
+	    (define-key map (kbd "c p") 'fontpreview-copy-font-path)
 	    (define-key map (kbd "s") 'fontpreview-set-frame-font)
 	    (define-key map (kbd "t") 'fontpreview-change-preview-text)
 	    (define-key map (kbd "f") 'fontpreview-change-foreground-color)
 	    (define-key map (kbd "b") 'fontpreview-change-background-color)
+	    (define-key map (kbd "+") 'fontpreview-change-font-size)
 	    (define-key map (kbd "q") 'fontpreview-quit)
             map) )
 
