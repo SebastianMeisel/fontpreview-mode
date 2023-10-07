@@ -1,7 +1,4 @@
 ;;;  fontpreview-mode.el  ---  fontpreview is  a package for  previewing of installed fonts  -*- lexical-binding: t; -*-
-
-;; Copyright (C) 2020 Sebastian Meisel <sebastian.meisel@gmail.com>
-
 ;; Author: Sebastian Meisel <sebastian.meisel@gmail.com>
 ;; Version: 0.8
 ;; Homepage: http://github.com/SebastianMeisel/fontpreview-mode
