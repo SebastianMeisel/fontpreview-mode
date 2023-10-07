@@ -1,4 +1,7 @@
 ;;;  fontpreview-mode.el  ---  fontpreview is  a package for  previewing of installed fonts  -*- lexical-binding: t; -*-
+;;
+;; Copyright (C) 2005-2023 Sebastian Meisel
+;;
 ;; Author: Sebastian Meisel <sebastian.meisel@gmail.com>
 ;; Version: 0.8
 ;; Homepage: http://github.com/SebastianMeisel/fontpreview-mode
@@ -292,7 +295,7 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
 
 ;;;###autoload
 (define-minor-mode fontpreview-mode
-  "Minor mode for acting on preview created by fontpreview"
+  "Minor mode for acting on preview created by fontpreview."
   :lighter " fontpreview"
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "n")  'fontpreview-next-font)
@@ -309,3 +312,7 @@ If PREVIEW-TEXT, FOREGROUND-COLOR, BACKGROUND-COLOR or FONT-SIZE are non-nil the
 (provide 'fontpreview-mode)
 
 ;;; fontpreview-mode.el ends here
+
+;; Local Variables:
+;; jinx-languages: "en"
+;; End:
